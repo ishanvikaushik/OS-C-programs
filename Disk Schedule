@@ -1,0 +1,256 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+void sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++)
+        for (int j = 0; j < n - i - 1; j++)
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+}
+
+void print_order(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+        if (i > 0) printf(" -> ");
+        printf("%d", arr[i]);
+    }
+    printf("\n");
+}
+
+void fcfs(int requests[], int n, int head) {
+    int seek = 0, order[MAX];
+    order[0] = head;
+
+    for (int i = 0; i < n; i++) {
+        seek += abs(head - requests[i]);
+        head = requests[i];
+        order[i + 1] = head;
+    }
+
+    printf("Order: ");
+    print_order(order, n + 1);
+    printf("Total Seek Time: %d\n", seek);
+    printf("Average Seek Time: %.2f\n", (float)seek / n);
+}
+
+void sstf(int requests[], int n, int head) {
+    int done[MAX] = {0}, order[MAX], count = 0, seek = 0;
+
+    order[count++] = head;
+
+    for (int i = 0; i < n; i++) {
+        int min = 10000, pos = -1;
+        for (int j = 0; j < n; j++) {
+            if (!done[j]) {
+                int diff = abs(head - requests[j]);
+                if (diff < min) {
+                    min = diff;
+                    pos = j;
+                }
+            }
+        }
+        seek += abs(head - requests[pos]);
+        head = requests[pos];
+        done[pos] = 1;
+        order[count++] = head;
+    }
+
+    printf("Order: ");
+    print_order(order, count);
+    printf("Total Seek Time: %d\n", seek);
+    printf("Average Seek Time: %.2f\n", (float)seek / n);
+}
+
+void scan(int requests[], int n, int head, int first, int last) {
+    int all[MAX], count = 0, order[MAX], k = 0;
+    for (int i = 0; i < n; i++) all[count++] = requests[i];
+    all[count++] = head;
+    sort(all, count);
+
+    int pos;
+    for (pos = 0; pos < count; pos++)
+        if (all[pos] == head) break;
+
+    int direction = (head - first <= last - head) ? 0 : 1;
+
+    if (direction == 1) {
+        for (int i = pos; i < count; i++) order[k++] = all[i];
+        order[k++] = last;
+        for (int i = pos - 1; i >= 0; i--) order[k++] = all[i];
+    } else {
+        for (int i = pos; i >= 0; i--) order[k++] = all[i];
+        order[k++] = first;
+        for (int i = pos + 1; i < count; i++) order[k++] = all[i];
+    }
+
+    int seek = 0;
+    for (int i = 1; i < k; i++)
+        seek += abs(order[i] - order[i - 1]);
+
+    printf("Order: ");
+    print_order(order, k);
+    printf("Total Seek Time: %d\n", seek);
+    printf("Average Seek Time: %.2f\n", (float)seek / n);
+}
+
+void cscan(int requests[], int n, int head, int first, int last) {
+    int all[MAX], count = 0, order[MAX], k = 0;
+    for (int i = 0; i < n; i++) all[count++] = requests[i];
+    all[count++] = head;
+    sort(all, count);
+
+    int pos;
+    for (pos = 0; pos < count; pos++)
+        if (all[pos] == head) break;
+
+    int direction = (head - first <= last - head) ? 0 : 1;
+
+    if (direction == 1) {
+        for (int i = pos; i < count; i++) order[k++] = all[i];
+        order[k++] = last;
+        order[k++] = first;
+        for (int i = 0; i < pos; i++) order[k++] = all[i];
+    } else {
+        for (int i = pos; i >= 0; i--) order[k++] = all[i];
+        order[k++] = first;
+        order[k++] = last;
+        for (int i = count - 1; i > pos; i--) order[k++] = all[i];
+    }
+
+    int seek = 0;
+    for (int i = 1; i < k; i++) {
+        if ((order[i - 1] == last && order[i] == first) || (order[i - 1] == first && order[i] == last)) continue;
+        seek += abs(order[i] - order[i - 1]);
+    }
+
+    printf("Order: ");
+    print_order(order, k);
+    printf("Total Seek Time: %d\n", seek);
+    printf("Average Seek Time: %.2f\n", (float)seek / n);
+}
+
+void look(int requests[], int n, int head) {
+    int all[MAX], count = 0, order[MAX], k = 0;
+    for (int i = 0; i < n; i++) all[count++] = requests[i];
+    all[count++] = head;
+    sort(all, count);
+
+    int pos;
+    for (pos = 0; pos < count; pos++)
+        if (all[pos] == head) break;
+
+    int direction = (head - all[0] <= all[count - 1] - head) ? 0 : 1;
+
+    if (direction == 1) {
+        for (int i = pos; i < count; i++) order[k++] = all[i];
+        for (int i = pos - 1; i >= 0; i--) order[k++] = all[i];
+    } else {
+        for (int i = pos; i >= 0; i--) order[k++] = all[i];
+        for (int i = pos + 1; i < count; i++) order[k++] = all[i];
+    }
+
+    int seek = 0;
+    for (int i = 1; i < k; i++)
+        seek += abs(order[i] - order[i - 1]);
+
+    printf("Order: ");
+    print_order(order, k);
+    printf("Total Seek Time: %d\n", seek);
+    printf("Average Seek Time: %.2f\n", (float)seek / n);
+}
+
+void clook(int requests[], int n, int head) {
+    int all[MAX], count = 0, order[MAX], k = 0;
+    for (int i = 0; i < n; i++) all[count++] = requests[i];
+    all[count++] = head;
+    sort(all, count);
+
+    int pos;
+    for (pos = 0; pos < count; pos++)
+        if (all[pos] == head) break;
+
+    int direction = (head - all[0] <= all[count - 1] - head) ? 0 : 1;
+
+    if (direction == 1) {
+        for (int i = pos; i < count; i++) order[k++] = all[i];
+        for (int i = 0; i < pos; i++) order[k++] = all[i];
+    } else {
+        for (int i = pos; i >= 0; i--) order[k++] = all[i];
+        for (int i = count - 1; i > pos; i--) order[k++] = all[i];
+    }
+
+    int seek = 0;
+    for (int i = 1; i < k; i++) {
+        if ((order[i - 1] > order[i] && direction == 1) || (order[i - 1] < order[i] && direction == 0)) continue;
+        seek += abs(order[i] - order[i - 1]);
+    }
+
+    printf("Order: ");
+    print_order(order, k);
+    printf("Total Seek Time: %d\n", seek);
+    printf("Average Seek Time: %.2f\n", (float)seek / n);
+}
+
+int main() {
+    int requests[MAX], n, head, first_cylinder, last_cylinder, choice;
+
+    printf("Enter number of disk requests: ");
+    scanf("%d", &n);
+    printf("Enter the disk requests:\n");
+    for (int i = 0; i < n; i++) scanf("%d", &requests[i]);
+
+    printf("Enter initial head position: ");
+    scanf("%d", &head);
+
+    printf("Enter first cylinder (e.g., 0): ");
+    scanf("%d", &first_cylinder);
+    printf("Enter last cylinder (e.g., 199): ");
+    scanf("%d", &last_cylinder);
+
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < first_cylinder || requests[i] > last_cylinder) {
+            printf("Invalid request %d. Must be between %d and %d.\n", requests[i], first_cylinder, last_cylinder);
+            return 1;
+        }
+    }
+
+    do {
+        printf("\n--- Disk Scheduling Menu ---\n");
+        printf("1. FCFS\n2. SSTF\n3. SCAN\n4. C-SCAN\n5. LOOK\n6. C-LOOK\n7. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                fcfs(requests, n, head);
+                break;
+            case 2:
+                sstf(requests, n, head);
+                break;
+            case 3:
+                scan(requests, n, head, first_cylinder, last_cylinder);
+                break;
+            case 4:
+                cscan(requests, n, head, first_cylinder, last_cylinder);
+                break;
+            case 5:
+                look(requests, n, head);
+                break;
+            case 6:
+                clook(requests, n, head);
+                break;
+            case 7:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice! Please enter between 1-7.\n");
+        }
+
+    } while (choice != 7);
+
+    return 0;
+}
