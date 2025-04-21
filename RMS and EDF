@@ -1,0 +1,119 @@
+#include <stdio.h>
+
+#define MAX 10
+#define TIME_LIMIT 20
+
+typedef struct {
+    int id;
+    int execution;
+    int period;
+    int deadline;
+    int remaining_time;
+    int next_arrival;
+    int absolute_deadline;
+} Task;
+
+void print_table(Task tasks[], int n) {
+    printf("\nInput Task Table:\n");
+    printf("------------------------------------------------\n");
+    printf("| Task ID | Exec Time | Period | Deadline |\n");
+    printf("------------------------------------------------\n");
+    for(int i = 0; i < n; i++) {
+        printf("|   T%d    |     %2d     |   %2d   |    %2d    |\n",
+               tasks[i].id, tasks[i].execution, tasks[i].period, tasks[i].deadline);
+    }
+    printf("------------------------------------------------\n");
+}
+
+void reset_tasks(Task tasks[], int n) {
+    for (int i = 0; i < n; i++) {
+        tasks[i].remaining_time = 0;
+        tasks[i].next_arrival = 0;
+        tasks[i].absolute_deadline = tasks[i].deadline;
+    }
+}
+
+void simulate_rms(Task tasks[], int n) {
+    printf("\n--- Rate Monotonic Scheduling (RMS) ---\nGantt Chart:\n");
+    reset_tasks(tasks, n);
+
+    for (int time = 0; time < TIME_LIMIT; time++) {
+        // Release tasks if it's their period
+        for (int i = 0; i < n; i++) {
+            if (time == tasks[i].next_arrival) {
+                tasks[i].remaining_time = tasks[i].execution;
+                tasks[i].next_arrival += tasks[i].period;
+            }
+        }
+
+        int current = -1;
+        int min_period = 9999;
+        for (int i = 0; i < n; i++) {
+            if (tasks[i].remaining_time > 0 && tasks[i].period < min_period) {
+                min_period = tasks[i].period;
+                current = i;
+            }
+        }
+
+        if (current != -1) {
+            printf("| T%d ", tasks[current].id);
+            tasks[current].remaining_time--;
+        } else {
+            printf("| IDLE ");
+        }
+    }
+    printf("|\n");
+}
+
+void simulate_edf(Task tasks[], int n) {
+    printf("\n--- Earliest Deadline First Scheduling (EDF) ---\nGantt Chart:\n");
+    reset_tasks(tasks, n);
+
+    for (int time = 0; time < TIME_LIMIT; time++) {
+        // Release tasks if it's their period
+        for (int i = 0; i < n; i++) {
+            if (time == tasks[i].next_arrival) {
+                tasks[i].remaining_time = tasks[i].execution;
+                tasks[i].next_arrival += tasks[i].period;
+                tasks[i].absolute_deadline = time + tasks[i].deadline;
+            }
+        }
+
+        int current = -1;
+        int min_deadline = 9999;
+        for (int i = 0; i < n; i++) {
+            if (tasks[i].remaining_time > 0 && tasks[i].absolute_deadline < min_deadline) {
+                min_deadline = tasks[i].absolute_deadline;
+                current = i;
+            }
+        }
+
+        if (current != -1) {
+            printf("| T%d ", tasks[current].id);
+            tasks[current].remaining_time--;
+        } else {
+            printf("| IDLE ");
+        }
+    }
+    printf("|\n");
+}
+
+int main() {
+    int n;
+    Task tasks[MAX];
+
+    printf("Enter number of tasks: ");
+    scanf("%d", &n);
+
+    for (int i = 0; i < n; i++) {
+        tasks[i].id = i + 1;
+        printf("\nEnter execution time, period, and deadline for Task %d: ", i + 1);
+        scanf("%d %d %d", &tasks[i].execution, &tasks[i].period, &tasks[i].deadline);
+    }
+
+    print_table(tasks, n);
+    simulate_rms(tasks, n);
+    simulate_edf(tasks, n);
+
+    return 0;
+}
