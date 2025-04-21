@@ -1,0 +1,323 @@
+#include <stdio.h>
+#define MAX 100
+
+void firstFit(int blocks[], int m, int processes[], int n) {
+    int allocation[MAX];
+    for (int i = 0; i < n; i++) allocation[i] = -1;
+
+    int tempBlocks[MAX];
+    for (int i = 0; i < m; i++) tempBlocks[i] = blocks[i];
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (tempBlocks[j] >= processes[i]) {
+                allocation[i] = j;
+                tempBlocks[j] -= processes[i];
+                break;
+            }
+        }
+    }
+
+    printf("\nFirst Fit Allocation:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Process %d -> ", i + 1);
+        if (allocation[i] != -1)
+            printf("Block %d\n", allocation[i] + 1);
+        else
+            printf("Not Allocated\n");
+    }
+}
+
+void bestFit(int blocks[], int m, int processes[], int n) {
+    int allocation[MAX];
+    for (int i = 0; i < n; i++) allocation[i] = -1;
+
+    int tempBlocks[MAX];
+    for (int i = 0; i < m; i++) tempBlocks[i] = blocks[i];
+
+    for (int i = 0; i < n; i++) {
+        int bestIdx = -1;
+        for (int j = 0; j < m; j++) {
+            if (tempBlocks[j] >= processes[i]) {
+                if (bestIdx == -1 || tempBlocks[j] < tempBlocks[bestIdx]) {
+                    bestIdx = j;
+                }
+            }
+        }
+        if (bestIdx != -1) {
+            allocation[i] = bestIdx;
+            tempBlocks[bestIdx] -= processes[i];
+        }
+    }
+
+    printf("\nBest Fit Allocation:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Process %d -> ", i + 1);
+        if (allocation[i] != -1)
+            printf("Block %d\n", allocation[i] + 1);
+        else
+            printf("Not Allocated\n");
+    }
+}
+
+void worstFit(int blocks[], int m, int processes[], int n) {
+    int allocation[MAX];
+    for (int i = 0; i < n; i++) allocation[i] = -1;
+
+    int tempBlocks[MAX];
+    for (int i = 0; i < m; i++) tempBlocks[i] = blocks[i];
+
+    for (int i = 0; i < n; i++) {
+        int worstIdx = -1;
+        for (int j = 0; j < m; j++) {
+            if (tempBlocks[j] >= processes[i]) {
+                if (worstIdx == -1 || tempBlocks[j] > tempBlocks[worstIdx]) {
+                    worstIdx = j;
+                }
+            }
+        }
+        if (worstIdx != -1) {
+            allocation[i] = worstIdx;
+            tempBlocks[worstIdx] -= processes[i];
+        }
+    }
+
+    printf("\nWorst Fit Allocation:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Process %d -> ", i + 1);
+        if (allocation[i] != -1)
+            printf("Block %d\n", allocation[i] + 1);
+        else
+            printf("Not Allocated\n");
+    }
+}
+
+int main() {
+    int m, n;
+    int blocks[MAX], processes[MAX];
+
+    printf("Enter number of memory blocks: ");
+    scanf("%d", &m);
+    printf("Enter sizes of %d memory blocks:\n", m);
+    for (int i = 0; i < m; i++) {
+        scanf("%d", &blocks[i]);
+    }
+
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    printf("Enter sizes of %d processes:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &processes[i]);
+    }
+
+    firstFit(blocks, m, processes, n);
+    bestFit(blocks, m, processes, n);
+    worstFit(blocks, m, processes, n);
+
+    return 0;
+}
+
+or
+
+#include <stdio.h>
+
+#define MAX 100
+
+// Structure to represent a Hole in memory
+struct Hole {
+    int id;
+    int size;
+    int originalSize;
+};
+
+// Structure to represent a Process
+struct Process {
+    int id;
+    int size;
+    int allocatedHole; // -1 if not allocated
+    int internalFrag;  // unused space in allocated hole
+};
+
+// First Fit Allocation
+void firstFit(struct Hole holes[], int nh, struct Process processes[], int np) {
+    int totalInternalFrag = 0;
+
+    // Allocate processes to holes using First Fit
+    for (int i = 0; i < np; i++) {
+        processes[i].allocatedHole = -1;
+        processes[i].internalFrag = 0;
+
+        for (int j = 0; j < nh; j++) {
+            if (holes[j].size >= processes[i].size) {
+                processes[i].allocatedHole = holes[j].id;
+                processes[i].internalFrag = holes[j].size - processes[i].size;
+                holes[j].size -= processes[i].size;
+                totalInternalFrag += processes[i].internalFrag;
+                break;
+            }
+        }
+    }
+
+    // Output First Fit allocation results
+    printf("\n--- First Fit Allocation ---\n");
+    for (int i = 0; i < np; i++) {
+        printf("Process %d (Size %d): ", processes[i].id, processes[i].size);
+        if (processes[i].allocatedHole != -1)
+            printf("Allocated to Hole %d (Internal Fragmentation = %d)\n",
+                   processes[i].allocatedHole, processes[i].internalFrag);
+        else
+            printf("Not Allocated\n");
+    }
+
+    printf("\nFinal Hole Availability:\n");
+    for (int i = 0; i < nh; i++) {
+        printf("Hole %d: Original = %d, Remaining = %d\n", holes[i].id, holes[i].originalSize, holes[i].size);
+    }
+
+    printf("Total Internal Fragmentation (First Fit): %d\n", totalInternalFrag);
+}
+
+// Best Fit Allocation
+void bestFit(struct Hole holes[], int nh, struct Process processes[], int np) {
+    int totalInternalFrag = 0;
+
+    // Reset hole sizes
+    for (int i = 0; i < nh; i++)
+        holes[i].size = holes[i].originalSize;
+
+    // Allocate processes to holes using Best Fit
+    for (int i = 0; i < np; i++) {
+        processes[i].allocatedHole = -1;
+        processes[i].internalFrag = 0;
+        int bestIndex = -1;
+
+        // Find the best fit for each process
+        for (int j = 0; j < nh; j++) {
+            if (holes[j].size >= processes[i].size) {
+                if (bestIndex == -1 || holes[j].size < holes[bestIndex].size) {
+                    bestIndex = j;
+                }
+            }
+        }
+
+        if (bestIndex != -1) {
+            processes[i].allocatedHole = holes[bestIndex].id;
+            processes[i].internalFrag = holes[bestIndex].size - processes[i].size;
+            holes[bestIndex].size -= processes[i].size;
+            totalInternalFrag += processes[i].internalFrag;
+        }
+    }
+
+    // Output Best Fit allocation results
+    printf("\n--- Best Fit Allocation ---\n");
+    for (int i = 0; i < np; i++) {
+        printf("Process %d (Size %d): ", processes[i].id, processes[i].size);
+        if (processes[i].allocatedHole != -1)
+            printf("Allocated to Hole %d (Internal Fragmentation = %d)\n",
+                   processes[i].allocatedHole, processes[i].internalFrag);
+        else
+            printf("Not Allocated\n");
+    }
+
+    printf("\nFinal Hole Availability:\n");
+    for (int i = 0; i < nh; i++) {
+        printf("Hole %d: Original = %d, Remaining = %d\n", holes[i].id, holes[i].originalSize, holes[i].size);
+    }
+
+    printf("Total Internal Fragmentation (Best Fit): %d\n", totalInternalFrag);
+}
+
+// Worst Fit Allocation
+void worstFit(struct Hole holes[], int nh, struct Process processes[], int np) {
+    int totalInternalFrag = 0;
+
+    // Reset hole sizes
+    for (int i = 0; i < nh; i++)
+        holes[i].size = holes[i].originalSize;
+
+    // Allocate processes to holes using Worst Fit
+    for (int i = 0; i < np; i++) {
+        processes[i].allocatedHole = -1;
+        processes[i].internalFrag = 0;
+        int worstIndex = -1;
+
+        // Find the worst fit for each process
+        for (int j = 0; j < nh; j++) {
+            if (holes[j].size >= processes[i].size) {
+                if (worstIndex == -1 || holes[j].size > holes[worstIndex].size) {
+                    worstIndex = j;
+                }
+            }
+        }
+
+        if (worstIndex != -1) {
+            processes[i].allocatedHole = holes[worstIndex].id;
+            processes[i].internalFrag = holes[worstIndex].size - processes[i].size;
+            holes[worstIndex].size -= processes[i].size;
+            totalInternalFrag += processes[i].internalFrag;
+        }
+    }
+
+    // Output Worst Fit allocation results
+    printf("\n--- Worst Fit Allocation ---\n");
+    for (int i = 0; i < np; i++) {
+        printf("Process %d (Size %d): ", processes[i].id, processes[i].size);
+        if (processes[i].allocatedHole != -1)
+            printf("Allocated to Hole %d (Internal Fragmentation = %d)\n",
+                   processes[i].allocatedHole, processes[i].internalFrag);
+        else
+            printf("Not Allocated\n");
+    }
+
+    printf("\nFinal Hole Availability:\n");
+    for (int i = 0; i < nh; i++) {
+        printf("Hole %d: Original = %d, Remaining = %d\n", holes[i].id, holes[i].originalSize, holes[i].size);
+    }
+
+    printf("Total Internal Fragmentation (Worst Fit): %d\n", totalInternalFrag);
+}
+
+int main() {
+    struct Hole holes[MAX];
+    struct Process processes[MAX];
+    int nh, np;
+
+    // Get number of memory holes and their sizes
+    printf("Enter number of memory holes: ");
+    scanf("%d", &nh);
+    for (int i = 0; i < nh; i++) {
+        printf("Enter size of Hole %d: ", i + 1);
+        scanf("%d", &holes[i].size);
+        holes[i].originalSize = holes[i].size;
+        holes[i].id = i + 1;
+    }
+
+    // Get number of processes and their memory requirements
+    printf("Enter number of processes: ");
+    scanf("%d", &np);
+    for (int i = 0; i < np; i++) {
+        printf("Enter size of Process %d: ", i + 1);
+        scanf("%d", &processes[i].size);
+        processes[i].id = i + 1;
+    }
+
+    // Perform First Fit Allocation
+    firstFit(holes, nh, processes, np);
+
+    // Reset hole sizes before performing Best Fit
+    for (int i = 0; i < nh; i++)
+        holes[i].size = holes[i].originalSize;
+
+    // Perform Best Fit Allocation
+    bestFit(holes, nh, processes, np);
+
+    // Reset hole sizes before performing Worst Fit
+    for (int i = 0; i < nh; i++)
+        holes[i].size = holes[i].originalSize;
+
+    // Perform Worst Fit Allocation
+    worstFit(holes, nh, processes, np);
+
+    return 0;
+}
+
