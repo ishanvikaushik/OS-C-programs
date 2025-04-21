@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #define MAX 10
-#define TIME_LIMIT 20
 
 typedef struct {
     int id;
@@ -33,12 +32,11 @@ void reset_tasks(Task tasks[], int n) {
     }
 }
 
-void simulate_rms(Task tasks[], int n) {
+void simulate_rms(Task tasks[], int n, int time_limit) {
     printf("\n--- Rate Monotonic Scheduling (RMS) ---\nGantt Chart:\n");
     reset_tasks(tasks, n);
 
-    for (int time = 0; time < TIME_LIMIT; time++) {
-        // Release tasks if it's their period
+    for (int time = 0; time < time_limit; time++) {
         for (int i = 0; i < n; i++) {
             if (time == tasks[i].next_arrival) {
                 tasks[i].remaining_time = tasks[i].execution;
@@ -63,14 +61,21 @@ void simulate_rms(Task tasks[], int n) {
         }
     }
     printf("|\n");
+
+    for (int i = 0; i <= time_limit; i++) {
+        if (i < 10)
+            printf("  %d  ", i);
+        else
+            printf(" %d  ", i);
+    }
+    printf("\n");
 }
 
-void simulate_edf(Task tasks[], int n) {
+void simulate_edf(Task tasks[], int n, int time_limit) {
     printf("\n--- Earliest Deadline First Scheduling (EDF) ---\nGantt Chart:\n");
     reset_tasks(tasks, n);
 
-    for (int time = 0; time < TIME_LIMIT; time++) {
-        // Release tasks if it's their period
+    for (int time = 0; time < time_limit; time++) {
         for (int i = 0; i < n; i++) {
             if (time == tasks[i].next_arrival) {
                 tasks[i].remaining_time = tasks[i].execution;
@@ -96,10 +101,18 @@ void simulate_edf(Task tasks[], int n) {
         }
     }
     printf("|\n");
+
+    for (int i = 0; i <= time_limit; i++) {
+        if (i < 10)
+            printf("  %d  ", i);
+        else
+            printf(" %d  ", i);
+    }
+    printf("\n");
 }
 
 int main() {
-    int n;
+    int n, time_limit;
     Task tasks[MAX];
 
     printf("Enter number of tasks: ");
@@ -111,9 +124,12 @@ int main() {
         scanf("%d %d %d", &tasks[i].execution, &tasks[i].period, &tasks[i].deadline);
     }
 
+    printf("\nEnter total time limit for scheduling: ");
+    scanf("%d", &time_limit);
+
     print_table(tasks, n);
-    simulate_rms(tasks, n);
-    simulate_edf(tasks, n);
+    simulate_rms(tasks, n, time_limit);
+    simulate_edf(tasks, n, time_limit);
 
     return 0;
 }
