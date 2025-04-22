@@ -1,0 +1,164 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define P 10
+#define R 10
+
+int avail[R], max[P][R], need[P][R], alloc[P][R];
+int p, r;
+
+void calcNeed() {
+    for (int i = 0; i < p; i++) {
+        for (int j = 0; j < r; j++) {
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+}
+
+void printMatrix(const char *name, int matrix[P][R]) {
+    printf("\n%s Matrix:\n", name);
+    for (int i = 0; i < p; i++) {
+        for (int j = 0; j < r; j++) {
+            printf("%d\t", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+bool isSafe() {
+    int work[R];
+    int safeSeq[P];
+    bool finish[P] = { false };
+    int index = 0;
+
+    for (int i = 0; i < r; i++) {
+        work[i] = avail[i];
+    }
+
+    while (index < p) {
+        bool found = false;
+        for (int i = 0; i < p; i++) {
+            if (!finish[i]) {
+                bool canAllocate = true;
+                for (int j = 0; j < r; j++) {
+                    if (need[i][j] > work[j]) {
+                        canAllocate = false;
+                        break;
+                    }
+                }
+                if (canAllocate) {
+                    for (int j = 0; j < r; j++) {
+                        work[j] += alloc[i][j];
+                    }
+                    safeSeq[index++] = i;
+                    finish[i] = true;
+                    found = true;
+                }
+            }
+        }
+        if (!found) {
+            return false;
+        }
+    }
+
+    printf("\nSystem is in a SAFE state.\nSafe sequence is: ");
+    for (int i = 0; i < p; i++) {
+        printf("P%d ", safeSeq[i]);
+    }
+    printf("\n");
+    return true;
+}
+
+bool requestResources(int proc, int req[R]) {
+    for (int i = 0; i < r; i++) {
+        if (req[i] > need[proc][i]) {
+            printf("Error: Process has exceeded its maximum claim.\n");
+            return false;
+        }
+        if (req[i] > avail[i]) {
+            printf("Resources not available. Process must wait.\n");
+            return false;
+        }
+    }
+
+    // Pretend allocation
+    for (int i = 0; i < r; i++) {
+        avail[i] -= req[i];
+        alloc[proc][i] += req[i];
+        need[proc][i] -= req[i];
+    }
+
+    if (!isSafe()) {
+        // Rollback
+        for (int i = 0; i < r; i++) {
+            avail[i] += req[i];
+            alloc[proc][i] -= req[i];
+            need[proc][i] += req[i];
+        }
+        printf("Request denied to avoid unsafe state.\n");
+        return false;
+    }
+
+    printf("Request granted. System remains in a safe state.\n");
+    return true;
+}
+
+int main() {
+    printf("Enter number of processes and resources: ");
+    scanf("%d %d", &p, &r);
+
+    printf("Enter available resources:\n");
+    for (int i = 0; i < r; i++) {
+        scanf("%d", &avail[i]);
+    }
+
+    printf("Enter maximum resource matrix:\n");
+    for (int i = 0; i < p; i++) {
+        printf("Process P%d: ", i);
+        for (int j = 0; j < r; j++) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    printf("Enter allocation matrix:\n");
+    for (int i = 0; i < p; i++) {
+        printf("Process P%d: ", i);
+        for (int j = 0; j < r; j++) {
+            scanf("%d", &alloc[i][j]);
+        }
+    }
+
+    // Calculate need matrix
+    calcNeed();
+
+    // Print matrices
+    printMatrix("Max", max);
+    printMatrix("Allocation", alloc);
+    printMatrix("Need", need);
+
+    // Safety check
+    if (!isSafe()) {
+        printf("System is in an UNSAFE state.\n");
+    }
+
+    // Request resources
+    int proc;
+    int req[R];
+    char choice;
+
+    printf("\nDo you want to make a resource request? (y/n): ");
+    scanf(" %c", &choice);
+
+    if (choice == 'y' || choice == 'Y') {
+        printf("Enter process number making the request (0 to %d): ", p - 1);
+        scanf("%d", &proc);
+        printf("Enter the request vector: ");
+        for (int i = 0; i < r; i++) {
+            scanf("%d", &req[i]);
+        }
+        requestResources(proc, req);
+    }
+
+    return 0;
+}
