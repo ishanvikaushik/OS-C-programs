@@ -1,0 +1,267 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void sjfn(int at[], int bt[], int n) {
+    int ct[n], tat[n], wt[n];
+    int complete = 0, current = 0, isCompleted[n], min = -1, sum = 0;
+    for (int i = 0; i < n; i++) isCompleted[i] = 0;
+
+    while (complete < n) {
+        min = -1;
+        for (int i = 0; i < n; i++) {
+            if (at[i] <= current && isCompleted[i] == 0) {
+                if (min == -1 || bt[i] < bt[min]) {
+                    min = i;
+                }
+            }
+        }
+        if (min == -1) {
+            current++;
+            continue;
+        }
+        current += bt[min];
+        ct[min] = current;
+        tat[min] = ct[min] - at[min];
+        wt[min] = tat[min] - bt[min];
+        isCompleted[min] = 1;
+        complete++;
+    }
+
+    printf("Process\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\n", i + 1, ct[i], tat[i], wt[i]);
+        sum += wt[i];
+    }
+    printf("Avg wait time: %.2f\n", (float)sum / n);
+}
+
+void sjfp(int at[], int bt[], int n) {
+    int ct[n], tat[n], wt[n], remain[n], isCompleted[n], complete = 0, current = 0, min = -1, sum = 0;
+    for (int i = 0; i < n; i++) {
+        remain[i] = bt[i];
+        isCompleted[i] = 0;
+    }
+
+    while (complete < n) {
+        min = -1;
+        for (int i = 0; i < n; i++) {
+            if (at[i] <= current && remain[i] > 0) {
+                if (min == -1 || remain[i] < remain[min]) {
+                    min = i;
+                }
+            }
+        }
+        if (min == -1) {
+            current++;
+            continue;
+        }
+        remain[min]--;
+        current++;
+        if (remain[min] == 0) {
+            ct[min] = current;
+            tat[min] = ct[min] - at[min];
+            wt[min] = tat[min] - bt[min];
+            isCompleted[min] = 1;
+            complete++;
+        }
+    }
+
+    printf("Process\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\n", i + 1, ct[i], tat[i], wt[i]);
+        sum += wt[i];
+    }
+    printf("Avg wait time: %.2f\n", (float)sum / n);
+}
+
+void priorityn(int at[], int bt[], int n, int priority[]) {
+    int ct[n], tat[n], wt[n], isCompleted[n], complete = 0, current = 0, min = -1, sum = 0;
+    for (int i = 0; i < n; i++) isCompleted[i] = 0;
+
+    while (complete < n) {
+        min = -1;
+        for (int i = 0; i < n; i++) {
+            if (at[i] <= current && isCompleted[i] == 0) {
+                if (min == -1 || priority[i] < priority[min]) {
+                    min = i;
+                }
+            }
+        }
+        if (min == -1) {
+            current++;
+            continue;
+        }
+        current += bt[min];
+        ct[min] = current;
+        tat[min] = ct[min] - at[min];
+        wt[min] = tat[min] - bt[min];
+        isCompleted[min] = 1;
+        complete++;
+    }
+
+    printf("Process\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\n", i + 1, ct[i], tat[i], wt[i]);
+        sum += wt[i];
+    }
+    printf("Avg wait time: %.2f\n", (float)sum / n);
+}
+
+void priorityp(int at[], int bt[], int n, int priority[]) {
+    int ct[n], tat[n], wt[n], remain[n], isCompleted[n], complete = 0, current = 0, min = -1, sum = 0;
+    for (int i = 0; i < n; i++) {
+        remain[i] = bt[i];
+        isCompleted[i] = 0;
+    }
+
+    while (complete < n) {
+        min = -1;
+        for (int i = 0; i < n; i++) {
+            if (at[i] <= current && remain[i] > 0) {
+                if (min == -1 || priority[i] < priority[min]) {
+                    min = i;
+                }
+            }
+        }
+        if (min == -1) {
+            current++;
+            continue;
+        }
+        remain[min]--;
+        current++;
+        if (remain[min] == 0) {
+            ct[min] = current;
+            tat[min] = ct[min] - at[min];
+            wt[min] = tat[min] - bt[min];
+            isCompleted[min] = 1;
+            complete++;
+        }
+    }
+
+    printf("Process\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\n", i + 1, ct[i], tat[i], wt[i]);
+        sum += wt[i];
+    }
+    printf("Avg wait time: %.2f\n", (float)sum / n);
+}
+
+void fcfs(int at[], int bt[], int n) {
+    int ct[n], tat[n], wt[n], complete = 0, sum = 0;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (at[j] > at[j + 1]) {
+                int temp = at[j];
+                at[j] = at[j + 1];
+                at[j + 1] = temp;
+
+                temp = bt[j];
+                bt[j] = bt[j + 1];
+                bt[j + 1] = temp;
+            }
+        }
+    }
+    complete = at[0];
+    for (int i = 0; i < n; i++) {
+        if (complete < at[i])
+            complete = at[i];
+        complete += bt[i];
+        ct[i] = complete;
+        tat[i] = ct[i] - at[i];
+        wt[i] = tat[i] - bt[i];
+    }
+
+    printf("Process\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\n", i + 1, ct[i], tat[i], wt[i]);
+        sum += wt[i];
+    }
+    printf("Avg wait time: %.2f\n", (float)sum / n);
+}
+
+void rr(int at[], int bt[], int n) {
+    int q;
+    printf("Enter time quantum: ");
+    scanf("%d", &q);
+
+    int ct[n], tat[n], wt[n], remain[n], current = 0, complete = 0, sum = 0;
+    for (int i = 0; i < n; i++) {
+        remain[i] = bt[i];
+    }
+
+    while (complete < n) {
+        for (int i = 0; i < n; i++) {
+            if (at[i] <= current && remain[i] > 0) {
+                if (remain[i] <= q) {
+                    current += remain[i];
+                    ct[i] = current;
+                    tat[i] = ct[i] - at[i];
+                    wt[i] = tat[i] - bt[i];
+                    remain[i] = 0;
+                    complete++;
+                } else {
+                    current += q;
+                    remain[i] -= q;
+                }
+            }
+        }
+        current++;
+    }
+
+    printf("Process\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\n", i + 1, ct[i], tat[i], wt[i]);
+        sum += wt[i];
+    }
+    printf("Avg wait time: %.2f\n", (float)sum / n);
+}
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    int at[n], bt[n];
+
+    printf("Enter AT:\n");
+    for (int i = 0; i < n; i++) scanf("%d", &at[i]);
+
+    printf("Enter BT:\n");
+    for (int i = 0; i < n; i++) scanf("%d", &bt[i]);
+
+    while (1) {
+        printf("\n1. SJF (non-preemptive)\n");
+        printf("2. SJF (preemptive)\n");
+        printf("3. Priority (non-preemptive)\n");
+        printf("4. Priority (preemptive)\n");
+        printf("5. FCFS\n");
+        printf("6. Round Robin\n");
+        printf("7. Exit\n");
+        printf("Enter choice: ");
+        int c;
+        scanf("%d", &c);
+
+        switch (c) {
+            case 1: sjfn(at, bt, n); break;
+            case 2: sjfp(at, bt, n); break;
+            case 3: {
+                int priority[n];
+                printf("Enter priorities:\n");
+                for (int i = 0; i < n; i++) scanf("%d", &priority[i]);
+                priorityn(at, bt, n, priority);
+                break;
+            }
+            case 4: {
+                int priority[n];
+                printf("Enter priorities:\n");
+                for (int i = 0; i < n; i++) scanf("%d", &priority[i]);
+                priorityp(at, bt, n, priority);
+                break;
+            }
+            case 5: fcfs(at, bt, n); break;
+            case 6: rr(at, bt, n); break;
+            case 7: exit(0);
+            default: printf("Invalid choice!\n");
+        }
+    }
+    return 0;
+}
