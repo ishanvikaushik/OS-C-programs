@@ -334,4 +334,84 @@ int main() {
     return 0;
 }
 
+or
+void resetHoles(struct Hole holes[], int nh) {
+    for (int i = 0; i < nh; i++) {
+        holes[i].size = holes[i].originalSize;
+    }
+}
 
+void inputHoles(struct Hole holes[], int *nh) {
+    printf("Enter number of memory holes: ");
+    scanf("%d", nh);
+    for (int i = 0; i < *nh; i++) {
+        printf("Enter size of Hole %d: ", i + 1);
+        scanf("%d", &holes[i].size);
+        holes[i].originalSize = holes[i].size;
+        holes[i].id = i + 1;
+    }
+}
+
+void inputProcesses(struct Process processes[], int *np) {
+    printf("Enter number of processes: ");
+    scanf("%d", np);
+    for (int i = 0; i < *np; i++) {
+        printf("Enter size of Process %d: ", i + 1);
+        scanf("%d", &processes[i].size);
+        processes[i].id = i + 1;
+    }
+}
+
+int main() {
+    struct Hole holes[MAX];
+    struct Process processes[MAX];
+    int nh = 0, np = 0, choice;
+
+    inputHoles(holes, &nh);
+    inputProcesses(processes, &np);
+
+    do {
+        printf("\n---- Memory Allocation Menu ----\n");
+        printf("1. First Fit\n");
+        printf("2. Best Fit\n");
+        printf("3. Worst Fit\n");
+        printf("4. Last Fit\n");
+        printf("5. Next Fit\n");
+        printf("6. Re-enter Holes and Processes\n");
+        printf("0. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        resetHoles(holes, nh);  // Reset memory holes before every allocation
+
+        switch (choice) {
+            case 1:
+                firstFit(holes, nh, processes, np);
+                break;
+            case 2:
+                bestFit(holes, nh, processes, np);
+                break;
+            case 3:
+                worstFit(holes, nh, processes, np);
+                break;
+            case 4:
+                lastFit(holes, nh, processes, np);
+                break;
+            case 5:
+                nextFit(holes, nh, processes, np);
+                break;
+            case 6:
+                inputHoles(holes, &nh);
+                inputProcesses(processes, &np);
+                break;
+            case 0:
+                printf("Exiting program.\n");
+                break;
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+
+    } while (choice != 0);
+
+    return 0;
+}
