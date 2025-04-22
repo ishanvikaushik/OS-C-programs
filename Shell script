@@ -1,0 +1,282 @@
+#!/bin/bash
+
+# Usage: ./find_pattern.sh <directory> <pattern>
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <directory> <pattern>"
+    exit 1
+fi
+
+directory="$1"
+pattern="$2"
+
+echo "Files in '$directory' matching pattern '$pattern':"
+find "$directory" -type f -name "*$pattern*"
+
+
+
+
+#!/bin/bash
+
+while true; do
+    echo ""
+    echo "========== FILE OPERATIONS MENU =========="
+    echo "1. Find files in a directory matching a pattern"
+    echo "2. Move .txt files with UPPERCASE letters in their name to 'Upper/' folder"
+    echo "3. List .txt files in 'Upper/' folder that contain only ALL CAPITAL content"
+    echo "4. Exit"
+    echo "=========================================="
+    read -p "Enter your choice [1-4]: " choice
+
+    case $choice in
+        1)
+            read -p "Enter directory path: " dir
+            read -p "Enter filename pattern: " pattern
+            echo "Files in '$dir' matching pattern '$pattern':"
+            find "$dir" -type f -name "*$pattern*"
+            ;;
+
+        2)
+            mkdir -p Upper
+            echo "Moving .txt files with at least one UPPERCASE letter in filename to 'Upper/'..."
+
+            for file in *.txt; do
+                if [[ "$file" =~ [A-Z] ]]; then
+                    mv "$file" Upper/
+                    echo "Moved: $file"
+                fi
+            done
+            ;;
+
+        3)
+            echo "Files in 'Upper/' with ALL CAPITAL content:"
+            for file in Upper/*.txt; do
+                if [ -f "$file" ]; then
+                    content=$(tr -d '\n ' < "$file")
+                    if [[ "$content" =~ ^[A-Z[:punct:]]+$ ]]; then
+                        echo "$file"
+                    fi
+                fi
+            done
+            ;;
+
+        4)
+            echo "Exiting. Goodbye!"
+            break
+            ;;
+
+        *)
+            echo "Invalid choice! Please enter a number from 1 to 4."
+            ;;
+    esac
+done
+
+
+
+
+
+#!/bin/bash
+
+# Check if file name is provided
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 filename"
+  exit 1
+fi
+
+# Check if file exists
+if [ ! -f "$1" ]; then
+  echo "File does not exist."
+  exit 1
+fi
+
+# Create a duplicate with .bak extension
+cp "$1" "$1.bak"
+echo "Duplicate created: $1.bak"
+
+
+#!/bin/bash
+
+# Check if at least one file is passed
+if [ $# -eq 0 ]; then
+  echo "Usage: $0 file1 file2 ..."
+  exit 1
+fi
+
+# Loop over all arguments
+for file in "$@"
+do
+  if [ -f "$file" ]; then
+    echo -n "Do you want to delete $file? (y/n): "
+    read choice
+    if [ "$choice" = "y" ]; then
+      rm "$file"
+      echo "$file deleted."
+    else
+      echo "$file not deleted."
+    fi
+  else
+    echo "$file not found."
+  fi
+done
+
+
+
+#!/bin/bash
+
+# Check if strings are passed
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 \"String1\" \"String2\" ..."
+  exit 1
+fi
+
+# Store arguments in array
+args=("$@")
+
+# User-defined bubble sort
+for ((i=0; i<$#; i++)); do
+  for ((j=i+1; j<$#; j++)); do
+    if [[ "${args[i]}" > "${args[j]}" ]]; then
+      temp="${args[i]}"
+      args[i]="${args[j]}"
+      args[j]="$temp"
+    fi
+  done
+done
+
+echo "Sorted Strings:"
+for str in "${args[@]}"
+do
+  echo "\"$str\""
+done
+
+
+
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 -option filename"
+  echo "Options: -linecount | -wordcount | -charcount"
+  exit 1
+fi
+
+option=$1
+file=$2
+
+if [ ! -f "$file" ]; then
+  echo "File not found!"
+  exit 1
+fi
+
+case $option in
+  -linecount)
+    lines=$(wc -l < "$file")
+    echo "Line Count: $lines"
+    ;;
+  -wordcount)
+    words=$(wc -w < "$file")
+    echo "Word Count: $words"
+    ;;
+  -charcount)
+    chars=$(wc -m < "$file")
+    echo "Character Count: $chars"
+    ;;
+  *)
+    echo "Invalid option. Use -linecount, -wordcount, or -charcount."
+    ;;
+esac
+
+
+
+Write a menu driven shell script to read list of patterns as command line arguments 
+and perform following operations. 
+a. Search the patterns in the given input file. Display all lines containing the pat- 
+ten in the given input file. 
+b. Delete all occurances of the pattern in the given input file. 
+c. Exit from the shell script. 
+#!/bin/bash
+
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 file pattern1 pattern2 ..."
+  exit 1
+fi
+
+file="$1"
+shift
+patterns=("$@")
+
+if [ ! -f "$file" ]; then
+  echo "File not found!"
+  exit 1
+fi
+
+while true
+do
+  echo ""
+  echo "------ Menu ------"
+  echo "1. Search patterns in file"
+  echo "2. Delete all pattern occurrences from file"
+  echo "3. Exit"
+  echo "Enter your choice: "
+  read choice
+
+  case $choice in
+    1)
+      echo "Matching lines:"
+      for pattern in "${patterns[@]}"
+      do
+        echo "Pattern: $pattern"
+        grep --color=always "$pattern" "$file"
+      done
+      ;;
+    2)
+      for pattern in "${patterns[@]}"
+      do
+        sed -i "s/$pattern//g" "$file"
+        echo "Deleted all occurrences of pattern: $pattern"
+      done
+      ;;
+    3)
+      echo "Exiting..."
+      exit 0
+      ;;
+    *)
+      echo "Invalid choice!"
+      ;;
+  esac
+done
+
+
+take extensions as input n display...then count the no of files w that extension in folder, replace files w 2nd extension to files w 1st extension, move the 2nd extension wala file to folder named FOLDER
+
+make shell script for this
+
+#!/bin/bash
+
+# Take input for both extensions
+read -p "Enter the first extension (without dot): " ext1
+read -p "Enter the second extension (without dot): " ext2
+
+# Show files with first extension
+echo -e "\nFiles with .$ext1 extension:"
+ls *.$ext1 2>/dev/null
+
+# Count files with second extension
+count=$(ls *.$ext2 2>/dev/null | wc -l)
+echo -e "\nNumber of files with .$ext2 extension: $count"
+
+# Create the folder if it doesn't exist
+mkdir -p FOLDER
+
+# Loop through files with second extension
+for file in *.$ext2; do
+    [ -e "$file" ] || continue  # skip if no such file
+
+    base="${file%.*}"             # get filename without extension
+    newname="$base.$ext1"         # new filename with first extension
+
+    cp "$file" "$newname"         # copy and rename with first extension
+    mv "$file" FOLDER/            # move original to FOLDER
+done
+
+echo -e "\nAll .$ext2 files renamed to .$ext1 and originals moved to FOLDER/"
+
