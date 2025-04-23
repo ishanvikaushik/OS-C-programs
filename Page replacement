@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <unistd.h>  // for fork()
+#include <sys/types.h>  // for pid_t
+#include <stdlib.h>
 
 #define MAX_PAGES 100
 #define MAX_FRAMES 10
@@ -189,9 +192,21 @@ int main() {
         return 1;
     }
 
-    fifo(pages, numPages, numFrames);
-    lru(pages, numPages, numFrames);
-    optimal(pages, numPages, numFrames);
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("Fork failed");
+        return 1;
+    }
+
+    if (pid == 0) {
+        // Child process: LRU and Optimal
+        lru(pages, numPages, numFrames);
+        optimal(pages, numPages, numFrames);
+    } else {
+        // Parent process: FIFO
+        fifo(pages, numPages, numFrames);
+    }
 
     return 0;
 }
