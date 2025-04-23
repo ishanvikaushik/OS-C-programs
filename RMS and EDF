@@ -2,134 +2,115 @@
 
 #define MAX 10
 
-typedef struct {
-    int id;
-    int execution;
-    int period;
-    int deadline;
-    int remaining_time;
-    int next_arrival;
-    int absolute_deadline;
-} Task;
-
-void print_table(Task tasks[], int n) {
-    printf("\nInput Task Table:\n");
-    printf("------------------------------------------------\n");
-    printf("| Task ID | Exec Time | Period | Deadline |\n");
-    printf("------------------------------------------------\n");
-    for(int i = 0; i < n; i++) {
-        printf("|   T%d    |     %2d     |   %2d   |    %2d    |\n",
-               tasks[i].id, tasks[i].execution, tasks[i].period, tasks[i].deadline);
-    }
-    printf("------------------------------------------------\n");
+// Function to calculate CPU utilization
+float calculate_utilization(int execution[], int period[], int n) {
+    float total = 0;
+    for (int i = 0; i < n; i++)
+        total += (float)execution[i] / period[i];
+    return total;
 }
 
-void reset_tasks(Task tasks[], int n) {
-    for (int i = 0; i < n; i++) {
-        tasks[i].remaining_time = 0;
-        tasks[i].next_arrival = 0;
-        tasks[i].absolute_deadline = tasks[i].deadline;
-    }
-}
+// Rate-Monotonic Scheduling
+void rate_monotonic(int execution[], int period[], int deadline[], int n, int simulation_time) {
+    printf("\n--- Rate-Monotonic Scheduling (RMS) ---\n");
+    float util = calculate_utilization(execution, period, n);
+    printf("CPU Utilization: %.2f\n", util);
 
-void simulate_rms(Task tasks[], int n, int time_limit) {
-    printf("\n--- Rate Monotonic Scheduling (RMS) ---\nGantt Chart:\n");
-    reset_tasks(tasks, n);
+    int remaining[MAX] = {0};
+    int next_arrival[MAX] = {0};
 
-    for (int time = 0; time < time_limit; time++) {
+    for (int time = 0; time < simulation_time; time++) {
+        int selected = -1;
+
+        // Check for arrival of new jobs
         for (int i = 0; i < n; i++) {
-            if (time == tasks[i].next_arrival) {
-                tasks[i].remaining_time = tasks[i].execution;
-                tasks[i].next_arrival += tasks[i].period;
+            if (time == next_arrival[i]) {
+                remaining[i] = execution[i];
+                next_arrival[i] += period[i];
             }
         }
 
-        int current = -1;
-        int min_period = 9999;
+        // Select task with the shortest period (highest priority)
         for (int i = 0; i < n; i++) {
-            if (tasks[i].remaining_time > 0 && tasks[i].period < min_period) {
-                min_period = tasks[i].period;
-                current = i;
+            if (remaining[i] > 0) {
+                if (selected == -1 || period[i] < period[selected])
+                    selected = i;
             }
         }
 
-        if (current != -1) {
-            printf("| T%d ", tasks[current].id);
-            tasks[current].remaining_time--;
+        // Execute task or idle
+        if (selected != -1) {
+            printf("Time %d: Executing Task %d\n", time, selected + 1);
+            remaining[selected]--;
         } else {
-            printf("| IDLE ");
+            printf("Time %d: Idle\n", time);
         }
     }
-    printf("|\n");
-
-    for (int i = 0; i <= time_limit; i++) {
-        if (i < 10)
-            printf("  %d  ", i);
-        else
-            printf(" %d  ", i);
-    }
-    printf("\n");
 }
 
-void simulate_edf(Task tasks[], int n, int time_limit) {
-    printf("\n--- Earliest Deadline First Scheduling (EDF) ---\nGantt Chart:\n");
-    reset_tasks(tasks, n);
+// Earliest-Deadline-First Scheduling
+void earliest_deadline_first(int execution[], int period[], int deadline[], int n, int simulation_time) {
+    printf("\n--- Earliest-Deadline-First Scheduling (EDF) ---\n");
+    float util = calculate_utilization(execution, period, n);
+    printf("CPU Utilization: %.2f\n", util);
 
-    for (int time = 0; time < time_limit; time++) {
+    int remaining[MAX] = {0};
+    int next_arrival[MAX] = {0};
+    int abs_deadline[MAX] = {0};
+
+    for (int time = 0; time < simulation_time; time++) {
+        int selected = -1;
+
+        // Check for new arrivals and assign deadlines
         for (int i = 0; i < n; i++) {
-            if (time == tasks[i].next_arrival) {
-                tasks[i].remaining_time = tasks[i].execution;
-                tasks[i].next_arrival += tasks[i].period;
-                tasks[i].absolute_deadline = time + tasks[i].deadline;
+            if (time == next_arrival[i]) {
+                remaining[i] = execution[i];
+                abs_deadline[i] = time + deadline[i];  // Absolute deadline
+                next_arrival[i] += period[i];
             }
         }
 
-        int current = -1;
-        int min_deadline = 9999;
+        // Choose task with earliest absolute deadline
         for (int i = 0; i < n; i++) {
-            if (tasks[i].remaining_time > 0 && tasks[i].absolute_deadline < min_deadline) {
-                min_deadline = tasks[i].absolute_deadline;
-                current = i;
+            if (remaining[i] > 0) {
+                if (selected == -1 || abs_deadline[i] < abs_deadline[selected])
+                    selected = i;
             }
         }
 
-        if (current != -1) {
-            printf("| T%d ", tasks[current].id);
-            tasks[current].remaining_time--;
+        // Execute or Idle
+        if (selected != -1) {
+            printf("Time %d: Executing Task %d\n", time, selected + 1);
+            remaining[selected]--;
         } else {
-            printf("| IDLE ");
+            printf("Time %d: Idle\n", time);
         }
     }
-    printf("|\n");
-
-    for (int i = 0; i <= time_limit; i++) {
-        if (i < 10)
-            printf("  %d  ", i);
-        else
-            printf(" %d  ", i);
-    }
-    printf("\n");
 }
 
+// Main function
 int main() {
-    int n, time_limit;
-    Task tasks[MAX];
+    int n, simulation_time;
+    int execution[MAX], period[MAX], deadline[MAX];
 
     printf("Enter number of tasks: ");
     scanf("%d", &n);
 
     for (int i = 0; i < n; i++) {
-        tasks[i].id = i + 1;
-        printf("\nEnter execution time, period, and deadline for Task %d: ", i + 1);
-        scanf("%d %d %d", &tasks[i].execution, &tasks[i].period, &tasks[i].deadline);
+        printf("\n--- Task %d ---\n", i + 1);
+        printf("Execution Time: ");
+        scanf("%d", &execution[i]);
+        printf("Period: ");
+        scanf("%d", &period[i]);
+        printf("Relative Deadline: ");
+        scanf("%d", &deadline[i]);
     }
 
-    printf("\nEnter total time limit for scheduling: ");
-    scanf("%d", &time_limit);
+    printf("\nEnter total simulation time: ");
+    scanf("%d", &simulation_time);
 
-    print_table(tasks, n);
-    simulate_rms(tasks, n, time_limit);
-    simulate_edf(tasks, n, time_limit);
+    rate_monotonic(execution, period, deadline, n, simulation_time);
+    earliest_deadline_first(execution, period, deadline, n, simulation_time);
 
     return 0;
 }
